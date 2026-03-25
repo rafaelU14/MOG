@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOG Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #111111;
+            --text: #ffffff;
+            --secondary: #888888;
+            --accent: #ffffff;
+            --border: #222222;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- HERO --- */
+        #hero-section {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 5.5rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -4px;
+        }
+
+        .start-btn {
+            margin-top: 40px;
+            background: var(--accent);
+            color: black;
+            border: none;
+            padding: 20px 70px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.2s;
+        }
+
+        .start-btn:hover { opacity: 0.9; }
+
+        /* --- FORM --- */
+        #form-section {
+            width: 90%;
+            max-width: 440px;
+            background: var(--card);
+            padding: 50px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .question { margin-bottom: 35px; }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .value-display { color: var(--text); }
+
+        /* Sliders Minimalistas */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--card);
+        }
+
+        .calc-btn {
+            width: 100%;
+            padding: 20px;
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--text);
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calc-btn:hover {
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        /* --- RESULT --- */
+        #result {
+            margin-top: 40px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+        }
+
+        #score-num {
+            font-size: 6.5rem;
+            font-weight: 800;
+            letter-spacing: -5px;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <section id="hero-section">
+        <h1>MOG</h1>
+        <h3>Find out how attractive you are</h3>
+        <button class="start-btn" onclick="init()">START</button>
+    </section>
+
+    <div id="form-section" class="hidden">
+        <div class="question">
+            <div class="label-row">
+                <span>How good looking are you?</span>
+                <span class="value-display" id="v1">7</span>
+            </div>
+            <input type="range" min="1" max="10" value="7" oninput="update('v1', this.value)" id="q1">
+        </div>
+
+        <div class="question">
+            <div class="label-row">
+                <span>How would you rate yourself as a person?</span>
+                <span class="value-display" id="v2">5</span>
+            </div>
+            <input type="range" min="1" max="10" value="5" oninput="update('v2', this.value)" id="q2">
+        </div>
+
+        <div class="question">
+            <div class="label-row">
+                <span>How quirky are you?</span>
+                <span class="value-display" id="v3">5</span>
+            </div>
+            <input type="range" min="1" max="10" value="5" oninput="update('v3', this.value)" id="q3">
+        </div>
+
+        <div class="question">
+            <div class="label-row">
+                <span>How many books do you read a year?</span>
+                <span class="value-display" id="v4">10</span>
+            </div>
+            <input type="range" min="0" max="100" value="10" oninput="update('v4', this.value)" id="q4">
+        </div>
+
+        <button class="calc-btn" onclick="calculate()">Analyze</button>
+
+        <div id="result" class="hidden">
+            <div id="score-num">0.0</div>
+        </div>
+    </div>
+
+    <script>
+        function update(id, val) { document.getElementById(id).innerText = val; }
+
+        function init() {
+            document.getElementById('hero-section').style.display = 'none';
+            document.getElementById('form-section').classList.remove('hidden');
+        }
+
+        async function calculate() {
+            const data = {
+                v1: document.getElementById('q1').value,
+                v2: document.getElementById('q2').value,
+                v3: document.getElementById('q3').value,
+                v4: document.getElementById('q4').value
+            };
+
+            const response = await fetch('/calculate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            document.getElementById('result').classList.remove('hidden');
+            
+            const obj = document.getElementById('score-num');
+            let start = 0;
+            let end = result.score;
+            let duration = 1800; // Un poco más lento para que sea dramático
+            let startTimestamp = null;
+
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // Ease out expo para un conteo muy fluido
+                const easeOut = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                obj.innerHTML = (easeOut * (end - start) + start).toFixed(2);
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+    </script>
+</body>
+</html>
